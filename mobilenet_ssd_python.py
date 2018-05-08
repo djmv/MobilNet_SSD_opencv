@@ -25,7 +25,7 @@ classNames = { 0: 'background',
     10: 'cow', 11: 'diningtable', 12: 'dog', 13: 'horse',
     14: 'motorbike', 15: 'person', 16: 'pottedplant',
     17: 'sheep', 18: 'sofa', 19: 'train', 20: 'tvmonitor' }
-WHRatio = 1.0
+
 # Open video file or capture device. 
 if args.video:
     cap = cv2.VideoCapture(args.video)
@@ -39,7 +39,7 @@ while True:
     # Capture frame-by-frame
     ret, frame = cap.read()
     frame_resized = cv2.resize(frame,(300,300)) # resize frame for prediction
-  
+
     # MobileNet requires fixed dimensions for input image(s)
     # so we have to ensure that it is resized to 300x300 pixels.
     # set a scale factor to image because network the objects has differents size. 
@@ -69,9 +69,17 @@ while True:
             yLeftBottom = int(detections[0, 0, i, 4] * rows)
             xRightTop   = int(detections[0, 0, i, 5] * cols)
             yRightTop   = int(detections[0, 0, i, 6] * rows)
-
+            
+            # Factor for scale to original size of frame
+            heightFactor = frame.shape[0]/300.0  
+            widthFactor = frame.shape[1]/300.0 
+            # Scale object detection to frame
+            xLeftBottom = int(widthFactor * xLeftBottom) 
+            yLeftBottom = int(heightFactor * yLeftBottom)
+            xRightTop   = int(widthFactor * xRightTop)
+            yRightTop   = int(heightFactor * yRightTop)
             # Draw location of object  
-            cv2.rectangle(frame_resized, (xLeftBottom, yLeftBottom), (xRightTop, yRightTop),
+            cv2.rectangle(frame, (xLeftBottom, yLeftBottom), (xRightTop, yRightTop),
                           (0, 255, 0))
 
             # Draw label and confidence of prediction in frame resized
@@ -80,15 +88,14 @@ while True:
                 labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
                 yLeftBottom = max(yLeftBottom, labelSize[1])
-                cv2.rectangle(frame_resized, (xLeftBottom, yLeftBottom - labelSize[1]),
+                cv2.rectangle(frame, (xLeftBottom, yLeftBottom - labelSize[1]),
                                      (xLeftBottom + labelSize[0], yLeftBottom + baseLine),
                                      (255, 255, 255), cv2.FILLED)
-                cv2.putText(frame_resized, label, (xLeftBottom, yLeftBottom),
+                cv2.putText(frame, label, (xLeftBottom, yLeftBottom),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+
                 print label #print class and confidence 
 
-    cv2.namedWindow("detections", cv2.WINDOW_NORMAL)  # Define a window name
-    cv2.imshow("detections", frame_resized)           # Display frame resized 
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.imshow("frame", frame)
     if cv2.waitKey(1) >= 0:  # Break with ESC 
