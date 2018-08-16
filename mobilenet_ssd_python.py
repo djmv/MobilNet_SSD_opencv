@@ -94,7 +94,7 @@ while True:
                 cv2.putText(frame, label, (xLeftBottom, yLeftBottom),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
 
-                print label #print class and confidence 
+                print(label) #print class and confidence
 
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.imshow("frame", frame)
